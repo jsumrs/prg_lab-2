@@ -2,7 +2,6 @@
 #include <fstream>
 #include <iostream>
 
-
 int main(int argc, char* argv[])
 {
     if (argc < 3) { // Ensure program was run with correct amount of arguments.
@@ -28,22 +27,19 @@ Node* read_file_to_list(std::string filename)
 {
     std::ifstream input { filename };
     if (input) {
-        Node* subject = new Node();
-        char data; // Use a char to deal with the decimal point.
-        bool decFound; // Flag to see if this number contains a decimal.
+        Node* subject = new Node(); 
+        bool decFound = false; 
+        char data; // Use a char to allow the decimal point.
         while (input >> data) {
-            if (data == '.') 
+            if (data == '.')
                 decFound = true;
             subject->data = static_cast<int>(data - '0'); // Cast back to int. Decimal becomes "-2".
-            Node* temp = new Node();
-            temp->next = subject;
-            subject = temp;
+            subject = new Node(subject); // Move along the pointer.
         }
-        Node* dummy = new Node();
-        dummy->next = subject;
-        if (!decFound)
-            dummy->data = -2; // Dummy will act as a decimal place to help calculations with the list.
-        return dummy;
+        if (!decFound)  // No decimal found, create a decimal node to make calculations on the list easier.
+            return new Node(new Node(subject, static_cast<int>('.' - '0')));
+        else
+            return new Node(subject);
     } else {
         std::cout << "Something went wrong opening file.\n";
         return nullptr;
@@ -52,43 +48,36 @@ Node* read_file_to_list(std::string filename)
 
 void print_list(Node* head)
 { // Print a list out, ignoring the dummy head.
-    if (head != nullptr) {
-        while ((head = head->next) != nullptr) {
+    if (head != nullptr) 
+        while ((head = head->next) != nullptr) 
             std::cout << head->data << '\n';
-        }
-    }
 }
 
 Node* add(Node* a, Node* b)
-{
-    if(a == nullptr) return b;
-    if(b == nullptr) return a;
+{   // Builds a new list 'c' in reverse order, which will be the correct order for the result.
+    if (a == nullptr)
+        return b;
+    if (b == nullptr)
+        return a;
 
-    Node* c = new Node();
-    Node* dummy = new Node();
-    dummy->next = c;
-
-    while(a != nullptr && b != nullptr) {
+    Node* c;
+    while (a != nullptr && b != nullptr) {
         const int decimal = -2;
         if (a->data == decimal && b->data == decimal)
             break;
         if (a->data == decimal) { // Move along the b node.
-            c->data = b->data;
-            c->next = new Node();
-            c = c->next;
+            c = new Node(c, b->data);
             b = b->next;
         } else if (b->data == decimal) { // Move along the a node.
-            c->data = a->data;
-            c->next = new Node();
-            c = c->next;
+            c = new Node(c, a->data);
             a = a->next;
         } else {
             // Do addition, remember to take care of carry.
-        }       
+        }
     }
     if (a != nullptr) // add the rest of a to c.
         ;
     if (b != nullptr) // add the rest of b to c.
-        ;    
+        ;
     return nullptr;
 }

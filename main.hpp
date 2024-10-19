@@ -5,6 +5,10 @@
 struct Node {
   Node* next;
   int data;
+  Node(): next(nullptr), data(0){}
+  Node(int d) : next(nullptr), data(d) {}
+  Node(Node* n) : next(n), data(0) {}
+  Node(Node* n, int d) : next(n), data(d) {}
 };
 
 void print_list(Node*);
