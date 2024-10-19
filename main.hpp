@@ -16,4 +16,5 @@ void write_list_to_file(Node*);
 Node* read_file_to_list(std::string filename);
 Node* add(Node*, Node*);
 Node* multiply(Node*, Node*);
-
+int count_decimals(Node*);
+void propagate_carry(Node*, int);
