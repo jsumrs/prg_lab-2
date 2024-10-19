@@ -20,6 +20,8 @@ int main(int argc, char* argv[])
 
     print_list(list1);
     print_list(list2);
+
+    Node* list3 = add(list1, list2);
 }
 
 Node* read_file_to_list(std::string filename)
@@ -28,7 +30,10 @@ Node* read_file_to_list(std::string filename)
     if (input) {
         Node* subject = new Node();
         char data; // Use a char to deal with the decimal point.
+        bool decFound; // Flag to see if this number contains a decimal.
         while (input >> data) {
+            if (data == '.') 
+                decFound = true;
             subject->data = static_cast<int>(data - '0'); // Cast back to int. Decimal becomes "-2".
             Node* temp = new Node();
             temp->next = subject;
@@ -36,6 +41,8 @@ Node* read_file_to_list(std::string filename)
         }
         Node* dummy = new Node();
         dummy->next = subject;
+        if (!decFound)
+            dummy->data = -2; // Dummy will act as a decimal place to help calculations with the list.
         return dummy;
     } else {
         std::cout << "Something went wrong opening file.\n";
@@ -50,4 +57,38 @@ void print_list(Node* head)
             std::cout << head->data << '\n';
         }
     }
+}
+
+Node* add(Node* a, Node* b)
+{
+    if(a == nullptr) return b;
+    if(b == nullptr) return a;
+
+    Node* c = new Node();
+    Node* dummy = new Node();
+    dummy->next = c;
+
+    while(a != nullptr && b != nullptr) {
+        const int decimal = -2;
+        if (a->data == decimal && b->data == decimal)
+            break;
+        if (a->data == decimal) { // Move along the b node.
+            c->data = b->data;
+            c->next = new Node();
+            c = c->next;
+            b = b->next;
+        } else if (b->data == decimal) { // Move along the a node.
+            c->data = a->data;
+            c->next = new Node();
+            c = c->next;
+            a = a->next;
+        } else {
+            // Do addition, remember to take care of carry.
+        }       
+    }
+    if (a != nullptr) // add the rest of a to c.
+        ;
+    if (b != nullptr) // add the rest of b to c.
+        ;    
+    return nullptr;
 }
