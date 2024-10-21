@@ -24,6 +24,8 @@ int main(int argc, char* argv[])
     if (list1 && list2)
         write_list_to_file(add(list1, list2), output_file);
 
+    print_list(list1);
+    print_list(list2);
     print_list(multiply(list1, list2));
     return 0;
 }
@@ -180,10 +182,18 @@ Node* multiply(Node* a, Node* b)
     b = b->next;
     int placeA = 1;
     while (a != nullptr) {
+        if (a->data == DECIMAL) {
+            a = a->next;
+            continue;
+        }
         Node* products = pad_carry(0, placeA - 1);
         Node* prd_head = products;
         int placeB = 1;
         while (b != nullptr) {
+            if (b->data == DECIMAL) {
+                b = b->next;
+                continue;
+            }
             int product = a->data * b->data;
             if (product > 10) { // Carry will be added later.
                 to_add->next = create_padded_carry(product, placeB);
@@ -193,12 +203,14 @@ Node* multiply(Node* a, Node* b)
             products->next = t;
             products = t;
             placeB++;
+            b = b->next;
         }
         Queue* qt = new Queue();
         qt->data = prd_head;
         to_add->next = qt;
         to_add = qt;
         placeA++;
+        a = a->next;
     }
     return add_queue(q_head);
 }
@@ -230,6 +242,14 @@ Node* add_queue(Queue* subject)
         int place = 1;
         Node* a_prev = new Node(a); // Drag this node behind a.
         while (a != nullptr && b != nullptr) {
+            if (a->data == DECIMAL) {
+                a = a->next;
+                continue;
+            }
+            if (b->data == DECIMAL) {
+                b = b->next;
+                continue;
+            }
             int result = a->data + b->data;
             a = a->next;
             a_prev = a_prev->next;
