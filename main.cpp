@@ -19,14 +19,24 @@ int main(int argc, char* argv[])
     // Output filename is optional, so define a default here.
     std::string output_file = argc < 4 ? "output_file" : argv[3];
 
+    std::cout << "Would you like to add or multiply? Enter a(dd) or m(ultiply): ";
+    char response = '0';
+    std::cin >> response;
+
     Node* list1 = read_file_to_list(input_file1);
     Node* list2 = read_file_to_list(input_file2);
-    // if (list1 && list2)
-    //     write_list_to_file(add(list1, list2), output_file);
+    if (response == 'a') {
+        // add
+        if (list1 && list2)
+            write_list_to_file(add(list1, list2), output_file);
+    } else if (response == 'm') {
+        // multiply
+        write_list_to_file(multiply(list1, list2), output_file);
+    } else {
+        std::cout << "Invalid option! Exiting...";
+        return 1;
+    }
 
-    print_list(list1);
-    print_list(list2);
-    print_list(multiply(list1, list2));
     return 0;
 }
 
@@ -57,7 +67,8 @@ Node* read_file_to_list(std::string filename)
 void write_list_to_file(Node* head, std::string filename)
 {
     std::ofstream output { filename };
-    if (output)
+    if (output) {
+        head = head->next; // Skip dummy header.
         while (head != nullptr) {
             int c = head->data;
             if (c == DECIMAL)
@@ -66,6 +77,7 @@ void write_list_to_file(Node* head, std::string filename)
                 output << c << '\n';
             head = head->next;
         }
+    }
 }
 
 void print_list(Node* head)
