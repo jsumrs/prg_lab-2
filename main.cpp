@@ -17,12 +17,15 @@ int main(int argc, char* argv[])
     std::string input_file2 = argv[2];
 
     // Output filename is optional, so define a default here.
-    std::string output_file = argc < 4 ? "output_file" : argv[3]; 
+    std::string output_file = argc < 4 ? "output_file" : argv[3];
 
     Node* list1 = read_file_to_list(input_file1);
     Node* list2 = read_file_to_list(input_file2);
     if (list1 && list2)
         write_list_to_file(add(list1, list2), output_file);
+
+    print_list(multiply(list1, list2));
+    return 0;
 }
 
 Node* read_file_to_list(std::string filename)
@@ -167,4 +170,90 @@ void add_data(Node** a, Node** b, Node** c)
     *b = (*b)->next;
     (*c)->data = result % 10;
     *c = new Node(*c);
+}
+
+Node* multiply(Node* a, Node* b)
+{
+    Queue* to_add = new Queue(); // List of lists of sums to add later.
+    Queue* q_head = to_add;
+    a = a->next; // Move past dummy;
+    b = b->next;
+    int placeA = 1;
+    while (a != nullptr) {
+        Node* products = pad_carry(0, placeA - 1);
+        Node* prd_head = products;
+        int placeB = 1;
+        while (b != nullptr) {
+            int product = a->data * b->data;
+            if (product > 10) { // Carry will be added later.
+                to_add->next = create_padded_carry(product, placeB);
+                to_add = to_add->next;
+            }
+            Node* t = new Node(product % 10);
+            products->next = t;
+            products = t;
+            placeB++;
+        }
+        Queue* qt = new Queue();
+        qt->data = prd_head;
+        to_add->next = qt;
+        to_add = qt;
+        placeA++;
+    }
+    return add_queue(q_head);
+}
+
+Node* pad_carry(const int carry, const int power)
+{ // Return a node which represents carry * 10^power.
+    Node* subject = new Node();
+    Node* head = subject;
+    for (int i = power; i > 0; i--) {
+        Node* t = new Node();
+        subject->next = t;
+        subject = t;
+    }
+    subject->data = carry;
+    return head;
+}
+
+Node* add_queue(Queue* subject)
+{
+    if (subject == nullptr || subject->next == nullptr)
+        return nullptr;
+    Queue* q_head = subject->next; // first place
+    subject = subject->next;
+    while (subject->next != nullptr) {
+        // keep adding till q is only one list.
+        // if a new carry happens, just add it to the q
+        Node* a = q_head->data->next;
+        Node* b = subject->next->data->next;
+        int place = 1;
+        Node* a_prev = new Node(a); // Drag this node behind a.
+        while (a != nullptr && b != nullptr) {
+            int result = a->data + b->data;
+            a = a->next;
+            a_prev = a_prev->next;
+            b = b->next;
+            if (result < 10) {
+                a->data = result;
+            } else {
+                Queue* q_temp = q_head->next;
+                q_head->next = create_padded_carry(result, place);
+                q_head->next->next = q_temp;
+            }
+        }
+
+        // Nothing needs to be done if a was longer that b.
+        if (b != nullptr)
+            a_prev->next = b;
+        subject = subject->next;
+    }
+    return q_head->data;
+}
+
+Queue* create_padded_carry(const int result, const int place)
+{
+    Queue* q_temp = new Queue();
+    q_temp->data = pad_carry(result / 10, place + 1);
+    return q_temp;
 }
