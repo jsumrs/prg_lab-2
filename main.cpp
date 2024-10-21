@@ -30,7 +30,7 @@ int main(int argc, char* argv[])
     if (response == 'a') {
         // add
         if (list1 && list2)
-            write_list_to_file(add(list1, list2), output_file);
+            write_list_to_file(add_driver(list1, list2), output_file);
     } else if (response == 'm') {
         // multiply
         write_list_to_file(multiply(list1, list2), output_file);
@@ -97,26 +97,44 @@ void print_list(Node* head)
     }
 }
 
-Node* add(Node* a, Node* b)
-{ // Builds a new list 'c' in reverse order, which will be the correct order for the result.
+Node* add_driver(Node* list1, Node* list2)
+{
+    Queue* q_subject = new Queue();
+    Queue* main_q_head = q_subject;
+    q_subject->next = new Queue(list1);
+    q_subject = q_subject->next;
+    q_subject->next = new Queue(list2);
+    q_subject = main_q_head->next;
+    while (main_q_head->next != nullptr) {
+        q_subject->data = add(q_subject->data, q_subject->next->data, q_subject);
+        q_subject = main_q_head;
+    }
+    return main_q_head->data;
+}
+Node* add(Node* a, Node* b, Queue* subject_q)
+{ 
     if (a == nullptr)
         return b;
     if (b == nullptr)
         return a;
 
-    int a_decimals_count = a->next->data; // # of digits till '.'
-    int b_decimals_count = b->next->data; // # of digits till '.'
+    std::cout << "Adding: \n";
+    print_list(a);
+    std::cout << "with: \n";
+    print_list(b);
+    
+    int a_decimals_count = a->data; // # of digits till '.'
+    int b_decimals_count = b->data; // # of digits till '.'
+    std::cout << "a: " << a->data << " b: " << b->data << '\n';
     a = a->next; // Move past dummy headers.
     b = b->next; // Move past dummy headers.
 
-    Queue* add_q = new Queue();
-    Queue* add_q_head = add_q; // Call add recursively till queue is done.
     Node* c = new Node();
     Node* c_head = c;
     int c_decimals_count = 0;
-    // std::cout << "a: " << a->data << " b: " << b->data << '\n';
-
-    while (a_decimals_count > 0 || b_decimals_count > 0) {
+    // Deal will decimals.
+    while (a_decimals_count > 0 && b_decimals_count > 0) {
+    std::cout << "a: " << a_decimals_count << " b: " << b_decimals_count << '\n';
         int new_data = 0;
         if (a_decimals_count > b_decimals_count) {
             new_data = a->data;
@@ -133,8 +151,9 @@ Node* add(Node* a, Node* b)
             a_decimals_count--;
             b_decimals_count--;
             if (new_data > 9) {
-                add_q->next->data = pad_carry(new_data / 10, c_decimals_count + 1);
-                add_q = add_q->next;
+                // Add the carry to the queue.
+                subject_q->next->data = pad_carry(new_data / 10, c_decimals_count + 1);
+                subject_q = subject_q->next;
                 new_data %= 10;
             }
         }
@@ -145,11 +164,11 @@ Node* add(Node* a, Node* b)
     }
 
     int digit_pos = c_decimals_count + 1;
-    while (a != nullptr && b != nullptr) {
+    while (a != nullptr || b != nullptr) {
         int sum = a->data + b->data;
         if (sum > 9) {
-            add_q->next->data = pad_carry(sum / 10, digit_pos + 1);
-            add_q = add_q->next;
+            subject_q->next->data = pad_carry(sum / 10, digit_pos + 1);
+            subject_q = subject_q->next;
             sum %= 10;
         }
         Node* temp = new Node(sum);
@@ -167,10 +186,6 @@ Node* add(Node* a, Node* b)
         c = b->next;
     }
 
-    add_q = add_q_head;
-    add_q = add_q->next;
-    while (add_q != nullptr) 
-        add(c_head, add_q->data);
     c_head->data = c_decimals_count;   
     return c;
 }
@@ -218,6 +233,8 @@ Node* multiply(Node* a, Node* b)
     return add_queue(q_head);
 }
 
+
+
 Node* pad_carry(const int carry, const int power)
 { // Return a node which represents carry * 10^power.
     Node* subject = new Node();
@@ -256,6 +273,7 @@ Node* add_queue(Queue* subject)
             int result = a->data + b->data;
             if (result < 10) {
                 a->data = result;
+
             } else {
                 Queue* q_temp = q_head->next;
                 q_head->next = create_padded_carry(result, place);
