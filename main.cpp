@@ -25,6 +25,8 @@ int main(int argc, char* argv[])
 
     Node* list1 = read_file_to_list(input_file1);
     Node* list2 = read_file_to_list(input_file2);
+    print_list(list1);
+    print_list(list2);
     if (response == 'a') {
         // add
         if (list1 && list2)
@@ -45,20 +47,21 @@ Node* read_file_to_list(std::string filename)
     std::ifstream input { filename };
     if (input) {
         Node* subject = new Node();
-        bool decFound = false;
+        bool dec_found = false;
+        int digits_after_dec = 0;
         char data; // Use a char to allow the decimal point.
         while (input >> data) {
-            if (data == '.')
-                decFound = true;
+            if (data == '.') {
+                dec_found = true;
+                continue;
+            } else if (dec_found)
+                digits_after_dec++;
             subject->data = static_cast<int>(data - '0'); // Cast back to int. Decimal becomes "-2".
             subject = new Node(subject); // Move along the pointer.
         }
         subject = subject->next;
-        if (!decFound) // No decimal found, create a decimal node to make calculations on the list easier.
-            return new Node(new Node(subject, DECIMAL));
-        else
-            return new Node(subject);
-    } else {
+        return new Node(subject, digits_after_dec); // Dummy will hold how many decimal numbers the list contains.
+    } else { // digits_after_dec = 0 implies that there was no decimal.
         std::cout << "Couldn't open file.\n";
         return nullptr;
     }
@@ -68,14 +71,15 @@ void write_list_to_file(Node* head, std::string filename)
 {
     std::ofstream output { filename };
     if (output) {
+        int dec_pos = head->data;
         head = head->next; // Skip dummy header.
         while (head != nullptr) {
-            int c = head->data;
-            if (c == DECIMAL)
+            if (dec_pos-- == 0)
                 output << '.' << '\n';
-            else
-                output << c << '\n';
-            head = head->next;
+            else {
+                output << head->data << '\n';
+                head = head->next;
+            }
         }
     }
 }
@@ -100,90 +104,75 @@ Node* add(Node* a, Node* b)
     if (b == nullptr)
         return a;
 
-    int a_decimals_count = count_decimals(a); // # of digits till '.'
-    int b_decimals_count = count_decimals(b);
+    int a_decimals_count = a->next->data; // # of digits till '.'
+    int b_decimals_count = b->next->data; // # of digits till '.'
+    a = a->next; // Move past dummy headers.
+    b = b->next; // Move past dummy headers.
 
-    // Move past dummy headers
-    a = a->next;
-    b = b->next;
+    Queue* add_q = new Queue();
+    Queue* add_q_head = add_q; // Call add recursively till queue is done.
     Node* c = new Node();
+    Node* c_head = c;
+    int c_decimals_count = 0;
     // std::cout << "a: " << a->data << " b: " << b->data << '\n';
-    while (a->data != DECIMAL || b->data != DECIMAL) {
-        if (a->data == DECIMAL || b_decimals_count > a_decimals_count) { // Move along the b node.
-            b_decimals_count -= b_decimals_count > a_decimals_count ? 1 : 0;
-            c->data = b->data;
-            b = b->next;
-            c = new Node(c);
-        } else if (b->data == DECIMAL || a_decimals_count > b_decimals_count) { // Move along the a node.
-            a_decimals_count -= a_decimals_count > b_decimals_count ? 1 : 0;
-            c->data = a->data;
+
+    while (a_decimals_count > 0 || b_decimals_count > 0) {
+        int new_data = 0;
+        if (a_decimals_count > b_decimals_count) {
+            new_data = a->data;
+            a_decimals_count--;
             a = a->next;
-            c = new Node(c);
-        } else
-            add_data(&a, &b, &c);
-    }
-
-    // Move past decimals:
-    a = a->next;
-    b = b->next;
-
-    c->data = DECIMAL;
-    c = new Node(c);
-    while (a != nullptr && b != nullptr)
-        add_data(&a, &b, &c);
-
-    // Add the left over nodes to the front of c.
-    while (a != nullptr) {
-        c->data = a->data;
-        a = a->next;
-        c = new Node(c);
-    }
-    while (b != nullptr) {
-        c->data = b->data;
-        b = b->next;
-        c = new Node(c);
-    }
-    return c;
-}
-
-int count_decimals(Node* n)
-{ // count the number of digits before a decimal is found.
-    int count = 0;
-    while (n && n->data != DECIMAL) {
-        n = n->next;
-        count++;
-    }
-    return count;
-}
-
-void propagate_carry(Node* head, int result)
-{ // Propagate a carry throughout the list so that all digits are 0 to 9.
-    // Function destroys the original data.
-    if (result < 10)
-        return;
-    else {
-        if (head->next == nullptr)
-            head->next = new Node(result / 10);
-        else {
-            if (head->next->data == DECIMAL)
-                propagate_carry(head->next, result);
-            else {
-                int c = head->next->data + (result / 10);
-                propagate_carry(head->next, c);
-                head->next->data = c % 10;
+        } else if (a_decimals_count < b_decimals_count) {
+            new_data = b->data;
+            b_decimals_count--;
+            b = b->next;
+        } else {
+            new_data = a->data + b->data;
+            a = a->next;
+            b = b->next;
+            a_decimals_count--;
+            b_decimals_count--;
+            if (new_data > 9) {
+                add_q->next->data = pad_carry(new_data / 10, c_decimals_count + 1);
+                add_q = add_q->next;
+                new_data %= 10;
             }
         }
+        Node* temp = new Node(new_data);
+        c->next = temp;
+        c = temp;
+        c_decimals_count++;
     }
-}
 
-void add_data(Node** a, Node** b, Node** c)
-{ // Add the data of a and b, put the result in a new node of c. Propagate any carries.
-    int result = (*a)->data + (*b)->data;
-    propagate_carry(*a, result);
-    *a = (*a)->next;
-    *b = (*b)->next;
-    (*c)->data = result % 10;
-    *c = new Node(*c);
+    int digit_pos = c_decimals_count + 1;
+    while (a != nullptr && b != nullptr) {
+        int sum = a->data + b->data;
+        if (sum > 9) {
+            add_q->next->data = pad_carry(sum / 10, digit_pos + 1);
+            add_q = add_q->next;
+            sum %= 10;
+        }
+        Node* temp = new Node(sum);
+        c->next = temp;
+        c = temp;
+        digit_pos++;
+    }
+    // Add the left over nodes to the front of c.
+    if (a != nullptr) {
+        c->next = a;
+        c = c->next;
+    }
+    else if (b != nullptr) {
+        c->next = b;
+        c = b->next;
+    }
+
+    add_q = add_q_head;
+    add_q = add_q->next;
+    while (add_q != nullptr) 
+        add(c_head, add_q->data);
+    c_head->data = c_decimals_count;   
+    return c;
 }
 
 Node* multiply(Node* a, Node* b)
