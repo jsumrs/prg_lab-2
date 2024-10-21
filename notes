@@ -1,0 +1,31 @@
+Something is going on with order of operations.
+
+Bug:
+a x b != b x a...
+
+Program should pass each property of multiplication:
+Commutative:
+	a x b = b x a
+Associative:
+	a x (b x c) = a (b x c)
+Distributive:
+	a x (b + c) = (a x b) + (a x c)
+	a x (b - c) = (a x b) - (a x c)
+Identity:
+	a x 1 = a
+Zero:
+	a x 0 = 0
+
+Program should pass each property of addition:
+Commutative:
+	a + b = b + a
+Associative:
+	a + (b + c) = a (b + c)
+Distributive:
+	a x (b + c) = (a x b) + (a x c)
+Additive:
+	a + 0 = a
+Opposites:
+	a + (-a) = 0
+	
+Time permitting, a program should be written to test each of these properties.

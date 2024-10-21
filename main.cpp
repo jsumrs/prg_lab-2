@@ -21,8 +21,8 @@ int main(int argc, char* argv[])
 
     Node* list1 = read_file_to_list(input_file1);
     Node* list2 = read_file_to_list(input_file2);
-    if (list1 && list2)
-        write_list_to_file(add(list1, list2), output_file);
+    // if (list1 && list2)
+    //     write_list_to_file(add(list1, list2), output_file);
 
     print_list(list1);
     print_list(list2);
@@ -180,21 +180,22 @@ Node* multiply(Node* a, Node* b)
     Queue* q_head = to_add;
     a = a->next; // Move past dummy;
     b = b->next;
-    int placeA = 1;
+    Node* b_head = b;
+    int placeA = 0;
     while (a != nullptr) {
         if (a->data == DECIMAL) {
             a = a->next;
             continue;
         }
-        Node* products = pad_carry(0, placeA - 1);
+        Node* products = new Node();
         Node* prd_head = products;
-        int placeB = 1;
+        int placeB = placeA + 1;
         while (b != nullptr) {
-            if (b->data == DECIMAL) {
+            if (b->data == DECIMAL || b->data == 0) {
                 b = b->next;
                 continue;
             }
-            int product = a->data * b->data;
+            int product = (a->data) * (b->data);
             if (product > 10) { // Carry will be added later.
                 to_add->next = create_padded_carry(product, placeB);
                 to_add = to_add->next;
@@ -211,6 +212,7 @@ Node* multiply(Node* a, Node* b)
         to_add = qt;
         placeA++;
         a = a->next;
+        b = b_head;
     }
     return add_queue(q_head);
 }
@@ -237,6 +239,9 @@ Node* add_queue(Queue* subject)
     while (subject->next != nullptr) {
         // keep adding till q is only one list.
         // if a new carry happens, just add it to the q
+
+
+        // I think something is wrong with the order of operations here. i have the right numbers in the wrong order.
         Node* a = q_head->data->next;
         Node* b = subject->next->data->next;
         int place = 1;
@@ -251,9 +256,6 @@ Node* add_queue(Queue* subject)
                 continue;
             }
             int result = a->data + b->data;
-            a = a->next;
-            a_prev = a_prev->next;
-            b = b->next;
             if (result < 10) {
                 a->data = result;
             } else {
@@ -261,6 +263,9 @@ Node* add_queue(Queue* subject)
                 q_head->next = create_padded_carry(result, place);
                 q_head->next->next = q_temp;
             }
+            a = a->next;
+            a_prev = a_prev->next;
+            b = b->next;
         }
 
         // Nothing needs to be done if a was longer that b.
