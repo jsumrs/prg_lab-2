@@ -239,9 +239,6 @@ Node* add_queue(Queue* subject)
     while (subject->next != nullptr) {
         // keep adding till q is only one list.
         // if a new carry happens, just add it to the q
-
-
-        // I think something is wrong with the order of operations here. i have the right numbers in the wrong order.
         Node* a = q_head->data->next;
         Node* b = subject->next->data->next;
         int place = 1;
