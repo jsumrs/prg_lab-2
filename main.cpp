@@ -105,7 +105,7 @@ Node* add_driver(Node* list1, Node* list2)
     q_subject = q_subject->next;
     q_subject->next = new Queue(list2);
     q_subject = main_q_head->next;
-    while (main_q_head->next != nullptr) {
+    while (main_q_head->next != nullptr && main_q_head->next->data != nullptr) {
         q_subject->data = add(q_subject->data, q_subject->next->data, q_subject);
         q_subject = main_q_head;
     }
@@ -133,7 +133,7 @@ Node* add(Node* a, Node* b, Queue* subject_q)
     Node* c_head = c;
     int c_decimals_count = 0;
     // Deal will decimals.
-    while (a_decimals_count > 0 && b_decimals_count > 0) {
+    while ((a_decimals_count > 0 || b_decimals_count > 0) && (a != nullptr && b != nullptr)) {
     std::cout << "a: " << a_decimals_count << " b: " << b_decimals_count << '\n';
         int new_data = 0;
         if (a_decimals_count > b_decimals_count) {
@@ -152,7 +152,11 @@ Node* add(Node* a, Node* b, Queue* subject_q)
             b_decimals_count--;
             if (new_data > 9) {
                 // Add the carry to the queue.
-                subject_q->next->data = pad_carry(new_data / 10, c_decimals_count + 1);
+                Queue* qt = new Queue();
+                qt = subject_q;
+                subject_q->next = new Queue();
+                subject_q->next->data = pad_carry(new_data / 10, c_decimals_count + 1); 
+                subject_q->next->next = qt;
                 subject_q = subject_q->next;
                 new_data %= 10;
             }
@@ -162,10 +166,12 @@ Node* add(Node* a, Node* b, Queue* subject_q)
         c = temp;
         c_decimals_count++;
     }
-
-    int digit_pos = c_decimals_count + 1;
-    while (a != nullptr || b != nullptr) {
+    print_list(c_head);
+    int digit_pos = 1;
+    while (a != nullptr && b != nullptr) {
         int sum = a->data + b->data;
+        a = a->next;
+        b = b->next;
         if (sum > 9) {
             subject_q->next->data = pad_carry(sum / 10, digit_pos + 1);
             subject_q = subject_q->next;
