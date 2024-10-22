@@ -1,7 +1,9 @@
 Something is going on with order of operations.
 
 Bug:
-a x b != b x a...
+11999.09^2 is correct but
+11999.09x2 is wrong
+
 
 Program should pass each property of multiplication:
 Commutative:

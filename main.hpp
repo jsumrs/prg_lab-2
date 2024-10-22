@@ -48,4 +48,3 @@ Number* add_helper(Number*, Number*, Stack*);
 Number* multiply(Number*, Number*);
 void multiply_helper(Number*, Number*, Stack*);
 Number* pad_carry(const int, const int);
-Number* pad_product(const int, const int);

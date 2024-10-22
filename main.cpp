@@ -3,8 +3,6 @@
 #include <iostream>
 #include <string>
 
-// constexpr int DECIMAL { static_cast<int>('.' - '0') };
-
 int main(int argc, char* argv[])
 {
     if (argc < 3) { // Ensure program was run with correct amount of arguments.
@@ -191,26 +189,15 @@ Number* pad_carry(const int carry, const int power)
     return head;
 }
 
-Number* pad_product(const int product, const int power)
-{ // Return a node which represents carry * 10^power.
-    Number* subject = new Number();
-    for (int i = power; i > 0; i--)
-        subject = subject->next = new Number();
-    subject->digit = product;
-    return subject;
-}
 Number* multiply(Number* list1, Number* list2)
 {
-    print_list(list1);
-    print_list(list2);
     const int decimal_point = list1->digit + list2->digit;
     Stack mult_stack {};
     multiply_helper(list1, list2, &mult_stack);
     Number* result = new Number();
     while (!mult_stack.is_empty())
         result = add_helper(result, mult_stack.pop(), &mult_stack);
-    list1->digit = decimal_point;
-    print_list(result);
+    result->digit = decimal_point;
     return result;
 }
 
@@ -234,9 +221,6 @@ void multiply_helper(Number* a, Number* b, Stack* mult_stack)
             placeB++;
             b = b->next;
         }
-        std::cout << "-------\n";
-        print_list(prd_head);
-        std::cout << "-------\n";
         mult_stack->push(prd_head);
         placeA++;
         a = a->next;
