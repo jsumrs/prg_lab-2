@@ -7,5 +7,6 @@ add_project_arguments('-Weffc++','-g', '-Wconversion', '-Wsign-conversion', lang
 
 executable('lab2',
            'main.cpp',
+           'Stack.cpp',
            install : true)
 

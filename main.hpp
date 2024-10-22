@@ -2,29 +2,45 @@
 
 #include <string>
 
-struct Node {
-  Node* next;
-  int data;
-  Node(): next(nullptr), data(0){}
-  Node(int d) : next(nullptr), data(d) {}
-  Node(Node* n) : next(n), data(0) {}
-  Node(Node* n, int d) : next(n), data(d) {}
+struct Number {
+    Number* next;
+    int digit; // If dummy this holds the decimal position. 0 implies no decimal. 1 implies decimal after first node.
+    Number(int d = 0, Number* n = nullptr)
+        : next { n }
+        , digit { d }
+    {
+    }
 };
 
-struct Queue {
-  Queue* next;
-  Node* data;
+class Stack {
+private:
+    struct Node {
+        Number* number;
+        Node* next;
+        Node(Number* n = nullptr, Node* ne = nullptr)
+            : number { n }
+            , next { ne }
+        {
+        }
+    };
 
-  Queue(): next(nullptr), data(nullptr) {}
-  Queue(Node* n): next(nullptr), data(n) {}
+public:
+    Stack() : head {new Node()} {}
+
+    void push(Number*);
+    Number* pop();
+    bool is_empty();
+
+private:
+    Node* head;
+    void init();
 };
 
-void print_list(Node*);
-void write_list_to_file(Node*, std::string filename);
-Node* read_file_to_list(std::string filename);
-Node* add_driver(Node*, Node*);
-Node* add(Node*, Node*, Queue*);
-Node* multiply(Node*, Node*);
-Node* pad_carry(const int, const int);
-Node* add_queue(Queue*);
-Queue* create_padded_carry(const int, const int);
+void print_list(Number*);
+void write_list_to_file(Number*, std::string filename);
+void reverse_list(Number*&);
+Number* read_file_to_list(std::string filename);
+Number* add_driver(Number*, Number*);
+Number* add(Number*, Number*, Stack*);
+Number* multiply(Number*, Number*);
+Number* pad_carry(const int, const int);
