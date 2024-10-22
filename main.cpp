@@ -22,21 +22,20 @@ int main(int argc, char* argv[])
     std::cout << "Would you like to add or multiply? Enter a(dd) or m(ultiply): ";
     char response = '0';
     std::cin >> response;
-
     Number* list1 = read_file_to_list(input_file1);
     Number* list2 = read_file_to_list(input_file2);
     if (list1 && list2) {
-        if (response == 'a') {
-            Number* output = add_driver(list1, list2);
-            write_list_to_file(output, output_file);
-        } else if (response == 'm') {
-            std::cout << "Sorry, multiply is not implemented.\n";
-        } else {
-            std::cout << "Invalid option! Exiting...";
+        Number* output;
+        if (response == 'a')
+            output = add(list1, list2);
+        else if (response == 'm')
+            output = multiply(list1, list2);
+        else {
+            std::cout << "Invalid option! Exiting...\n";
             return 1;
         }
+        write_list_to_file(output, output_file);
     }
-
     return 0;
 }
 
@@ -59,7 +58,7 @@ Number* read_file_to_list(std::string filename)
         }
         subject = subject->next;
         return new Number(digits_after_dec, subject); // Dummy will hold how many decimal numbers the list contains.
-    } else { // digits_after_dec = 0 implies that there was no decimal.
+    } else {
         std::cout << "Couldn't open file.\n";
         return nullptr;
     }
@@ -112,16 +111,16 @@ void print_list(Number* head)
     }
 }
 
-Number* add_driver(Number* list1, Number* list2)
+Number* add(Number* list1, Number* list2)
 {
     Stack add_stack {};
     add_stack.push(list2);
     while (!add_stack.is_empty())
-        list1 = add(list1, add_stack.pop(), &add_stack);
+        list1 = add_helper(list1, add_stack.pop(), &add_stack);
     return list1;
 }
 
-Number* add(Number* a, Number* b, Stack* add_stack)
+Number* add_helper(Number* a, Number* b, Stack* add_stack)
 {
     if (a == nullptr)
         return b;
@@ -137,29 +136,27 @@ Number* add(Number* a, Number* b, Stack* add_stack)
     int c_decimals_count = 0;
     // Deal will decimals.
     while ((a_decimals_count > 0 || b_decimals_count > 0) && (a != nullptr && b != nullptr)) {
-        int new_data = 0;
+        int sum = 0;
         if (a_decimals_count > b_decimals_count) {
-            new_data = a->digit;
+            sum = a->digit;
             a_decimals_count--;
             a = a->next;
         } else if (a_decimals_count < b_decimals_count) {
-            new_data = b->digit;
+            sum = b->digit;
             b_decimals_count--;
             b = b->next;
         } else {
-            new_data = a->digit + b->digit;
+            sum = a->digit + b->digit;
             a = a->next;
             b = b->next;
             a_decimals_count--;
             b_decimals_count--;
-            if (new_data > 9) {
-                add_stack->push(pad_carry(new_data / 10, c_decimals_count + 1));
-                new_data %= 10;
+            if (sum > 9) {
+                add_stack->push(pad_carry(sum / 10, c_decimals_count + 1));
+                sum %= 10;
             }
         }
-        Number* temp = new Number(new_data);
-        c->next = temp;
-        c = temp;
+        c = c->next = new Number(sum);
         c_decimals_count++;
     }
     int digit_pos = 1;
@@ -171,77 +168,78 @@ Number* add(Number* a, Number* b, Stack* add_stack)
             add_stack->push(pad_carry(sum / 10, digit_pos + 1));
             sum %= 10;
         }
-        Number* temp = new Number(sum);
-        c->next = temp;
-        c = temp;
+        c = c->next = new Number(sum);
         digit_pos++;
     }
     // Add the left over nodes to the front of c.
-    if (a != nullptr) {
-        c->next = a;
-        c = c->next;
-    } else if (b != nullptr) {
-        c->next = b;
-        c = c->next;
-    }
+    if (a != nullptr)
+        c = c->next = a;
+    else if (b != nullptr)
+        c = c->next = b;
 
     c_head->digit = c_decimals_count;
-    a = c_head;
-    return a;
+    return c_head;
 }
 
 Number* pad_carry(const int carry, const int power)
 { // Return a node which represents carry * 10^power.
     Number* subject = new Number();
     Number* head = subject;
-    for (int i = power; i > 0; i--) {
-        Number* t = new Number();
-        subject->next = t;
-        subject = t;
-    }
+    for (int i = power; i > 0; i--)
+        subject = subject->next = new Number();
     subject->digit = carry;
     return head;
 }
 
-// Number* multiply(Number* a, Number* b)
-// {
-//     Stack* to_add = new Stack(); // List of lists of sums to add later.
-//     Stack* q_head = to_add;
-//     a = a->next; // Move past dummy;
-//     b = b->next;
-//     Number* b_head = b;
-//     int placeA = 0;
-//     while (a != nullptr) {
-//         if (a->digit == DECIMAL) {
-//             a = a->next;
-//             continue;
-//         }
-//         Number* products = new Number();
-//         Number* prd_head = products;
-//         int placeB = placeA + 1;
-//         while (b != nullptr) {
-//             if (b->digit == DECIMAL || b->digit == 0) {
-//                 b = b->next;
-//                 continue;
-//             }
-//             int product = (a->digit) * (b->digit);
-//             if (product > 10) { // Carry will be added later.
-//                 to_add->next = create_padded_carry(product, placeB);
-//                 to_add = to_add->next;
-//             }
-//             Number* t = new Node(product % 10);
-//             products->next = t;
-//             products = t;
-//             placeB++;
-//             b = b->next;
-//         }
-//         Stack* qt = new Stack();
-//         qt->data = prd_head;
-//         to_add->next = qt;
-//         to_add = qt;
-//         placeA++;
-//         a = a->next;
-//         b = b_head;
-//     }
-//     return add_queue(q_head);
-// }
+Number* pad_product(const int product, const int power)
+{ // Return a node which represents carry * 10^power.
+    Number* subject = new Number();
+    for (int i = power; i > 0; i--)
+        subject = subject->next = new Number();
+    subject->digit = product;
+    return subject;
+}
+Number* multiply(Number* list1, Number* list2)
+{
+    print_list(list1);
+    print_list(list2);
+    const int decimal_point = list1->digit + list2->digit;
+    Stack mult_stack {};
+    multiply_helper(list1, list2, &mult_stack);
+    Number* result = new Number();
+    while (!mult_stack.is_empty())
+        result = add_helper(result, mult_stack.pop(), &mult_stack);
+    list1->digit = decimal_point;
+    print_list(result);
+    return result;
+}
+
+void multiply_helper(Number* a, Number* b, Stack* mult_stack)
+{
+    a = a->next; // Move past dummy;
+    b = b->next;
+    Number* b_head = b; // b_head needs to be the first non dummy head.
+    int placeA = 0;
+    while (a != nullptr) {
+        Number* products = pad_carry(0, placeA);
+        Number* prd_head {products};
+        while (products->next != nullptr)
+            products = products->next;
+        int placeB = placeA + 1;
+        while (b != nullptr) {
+            int product = (a->digit) * (b->digit);
+            if (product > 9) // Carry will be added later.
+                mult_stack->push(pad_carry(product / 10, placeB + 1));
+            products = products->next = new Number(product % 10);
+            placeB++;
+            b = b->next;
+        }
+        std::cout << "-------\n";
+        print_list(prd_head);
+        std::cout << "-------\n";
+        mult_stack->push(prd_head);
+        placeA++;
+        a = a->next;
+        b = b_head;
+    }
+}

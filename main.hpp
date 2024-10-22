@@ -25,7 +25,10 @@ private:
     };
 
 public:
-    Stack() : head {new Node()} {}
+    Stack()
+        : head { new Node() }
+    {
+    }
 
     void push(Number*);
     Number* pop();
@@ -40,7 +43,9 @@ void print_list(Number*);
 void write_list_to_file(Number*, std::string filename);
 void reverse_list(Number*&);
 Number* read_file_to_list(std::string filename);
-Number* add_driver(Number*, Number*);
-Number* add(Number*, Number*, Stack*);
+Number* add(Number*, Number*);
+Number* add_helper(Number*, Number*, Stack*);
 Number* multiply(Number*, Number*);
+void multiply_helper(Number*, Number*, Stack*);
 Number* pad_carry(const int, const int);
+Number* pad_product(const int, const int);
