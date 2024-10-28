@@ -1,9 +1,9 @@
-Something is going on with order of operations.
-
-Bug:
-11999.09^2 is correct but
-11999.09x2 is wrong
-
+Bugs:
+	- Decimals fuck everything up (generally when decimals aren't lined up, including numbers without a decimal point).
+		- Things work fine for most things now except when adding a number with a decimal, and a number without one aka when decimal is not aligned.
+		- I've tried padding the numbers before adding but it fucks with carry adds.
+		- Previously decimal was instead a -2 and handled accordingly.
+		- I need a new way to track the decimal.
 
 Program should pass each property of multiplication:
 Commutative:

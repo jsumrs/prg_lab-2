@@ -70,18 +70,18 @@ void write_list_to_file(Number* head, std::string filename)
         int dec_pos = head->digit;
         head = head->next; // Skip dummy header.
         while (head != nullptr) {
-            if (dec_pos-- == 0)
-                output << '.' << '\n';
-            else {
+            if (dec_pos-- != 0) {
                 output << head->digit << '\n';
                 head = head->next;
+            } else {
+                output << '.' << '\n';
             }
         }
     }
 }
 
 void reverse_list(Number*& head)
-{ // Note: decimal place information is lost upon reversal.
+{ //
     Number* r_head = new Number();
     const int original_decimal = head->digit;
     int count = 0;
@@ -111,76 +111,56 @@ void print_list(Number* head)
 
 Number* add(Number* list1, Number* list2)
 {
+    const int dec_point = list1->digit;
     Stack add_stack {};
-    add_stack.push(list2);
-    while (!add_stack.is_empty())
-        list1 = add_helper(list1, add_stack.pop(), &add_stack);
-    return list1;
+    list1 = add_helper(list1, list2, &add_stack);
+    add_stack.push(list1);
+    Number* result = new Number();
+    while (!add_stack.is_empty()) {
+        result = add_helper(result, add_stack.pop(), &add_stack);
+    }
+    result->digit = dec_point;
+    print_list(result);
+    return result;
 }
 
 Number* add_helper(Number* a, Number* b, Stack* add_stack)
 {
+    print_list(a);
+    print_list(b);
+    std::cout << '\n';
     if (a == nullptr)
         return b;
     if (b == nullptr)
         return a;
-    int a_decimals_count = a->digit; // # of digits till '.'
-    int b_decimals_count = b->digit; // # of digits till '.'
+    std::cout << "a: " << a->digit << " b: " << b->digit << '\n';
     a = a->next; // Move past dummy headers.
     b = b->next; // Move past dummy headers.
 
     Number* c = new Number();
     Number* c_head = c;
-    int c_decimals_count = 0;
-    // Deal will decimals.
-    while ((a_decimals_count > 0 || b_decimals_count > 0) && (a != nullptr && b != nullptr)) {
-        int sum = 0;
-        if (a_decimals_count > b_decimals_count) {
-            sum = a->digit;
-            a_decimals_count--;
-            a = a->next;
-        } else if (a_decimals_count < b_decimals_count) {
-            sum = b->digit;
-            b_decimals_count--;
-            b = b->next;
-        } else {
-            sum = a->digit + b->digit;
-            a = a->next;
-            b = b->next;
-            a_decimals_count--;
-            b_decimals_count--;
-            if (sum > 9) {
-                add_stack->push(pad_carry(sum / 10, c_decimals_count + 1));
-                sum %= 10;
-            }
-        }
-        c = c->next = new Number(sum);
-        c_decimals_count++;
-    }
     int digit_pos = 1;
-    while (a != nullptr && b != nullptr) {
-        int sum = a->digit + b->digit;
-        a = a->next;
-        b = b->next;
-        if (sum > 9) {
-            add_stack->push(pad_carry(sum / 10, digit_pos + 1));
-            sum %= 10;
+    while (a != nullptr || b != nullptr) {
+        int sum = 0;
+        if (a != nullptr) {
+            sum += a->digit;
+            a = a->next;
         }
-        c = c->next = new Number(sum);
+        if (b != nullptr) {
+            sum += b->digit;
+            b = b->next;
+        }
+        if (sum > 9)
+            add_stack->push(pad_carry(sum / 10, digit_pos + 1));
+        c = c->next = new Number(sum % 10);
         digit_pos++;
     }
-    // Add the left over nodes to the front of c.
-    if (a != nullptr)
-        c = c->next = a;
-    else if (b != nullptr)
-        c = c->next = b;
-
-    c_head->digit = c_decimals_count;
+    c_head->digit = digit_pos;
     return c_head;
 }
 
 Number* pad_carry(const int carry, const int power)
-{ // Return a node which represents carry * 10^power.
+{ // Return a number which represents carry * 10^power.
     Number* subject = new Number();
     Number* head = subject;
     for (int i = power; i > 0; i--)
@@ -197,8 +177,8 @@ Number* multiply(Number* list1, Number* list2)
     Number* result = new Number();
     while (!mult_stack.is_empty())
         result = add_helper(result, mult_stack.pop(), &mult_stack);
-    result->digit = decimal_point;
-    return result;
+    result = result->next;
+    return new Number(decimal_point, result);
 }
 
 void multiply_helper(Number* a, Number* b, Stack* mult_stack)
@@ -209,7 +189,7 @@ void multiply_helper(Number* a, Number* b, Stack* mult_stack)
     int placeA = 0;
     while (a != nullptr) {
         Number* products = pad_carry(0, placeA);
-        Number* prd_head {products};
+        Number* prd_head { products };
         while (products->next != nullptr)
             products = products->next;
         int placeB = placeA + 1;
