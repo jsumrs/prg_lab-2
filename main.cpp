@@ -120,15 +120,11 @@ Number* add(Number* list1, Number* list2)
         result = add_helper(result, add_stack.pop(), &add_stack);
     }
     result->digit = dec_point;
-    print_list(result);
     return result;
 }
 
 Number* add_helper(Number* a, Number* b, Stack* add_stack)
 {
-    std::cout << "Adding: \n";
-    print_list(a);
-    print_list(b);
     if (a == nullptr)
         return b;
     if (b == nullptr)
@@ -142,7 +138,6 @@ Number* add_helper(Number* a, Number* b, Stack* add_stack)
     Number* c = new Number();
     Number* c_head = c;
     while (a_dec != b_dec && a != nullptr && b != nullptr) {
-        std::cout << "a_dec: " << a_dec << "b_dec: " << b_dec << '\n'; 
         if (a_dec > b_dec) {
             c = c->next = new Number(a->digit);
             a = a->next;
@@ -153,8 +148,6 @@ Number* add_helper(Number* a, Number* b, Stack* add_stack)
             a_dec++;
         }
     c_head->digit++; // 'empty' decimal point
-
-    print_list(c_head);
     }
     int digit_pos = c_head->digit + 1; // start past the decimal point if it was padded out earlier.
     while (a != nullptr || b != nullptr) {
@@ -172,8 +165,6 @@ Number* add_helper(Number* a, Number* b, Stack* add_stack)
         c = c->next = new Number(sum % 10);
         digit_pos++;
     }
-    std::cout << "Result: \n";
-    print_list(c_head); 
     return c_head;
 }
 
@@ -184,8 +175,6 @@ Number* pad_carry(const int carry, const int power)
     for (int i = power; i > 0; i--)
         subject = subject->next = new Number();
     subject->digit = carry;
-    std::cout << "Padding with: \n";
-    print_list(head);
     return head;
 }
 
