@@ -126,20 +126,37 @@ Number* add(Number* list1, Number* list2)
 
 Number* add_helper(Number* a, Number* b, Stack* add_stack)
 {
+    std::cout << "Adding: \n";
     print_list(a);
     print_list(b);
-    std::cout << '\n';
     if (a == nullptr)
         return b;
     if (b == nullptr)
         return a;
-    std::cout << "a: " << a->digit << " b: " << b->digit << '\n';
+
+    int a_dec = a->digit;
+    int b_dec = b->digit;
     a = a->next; // Move past dummy headers.
     b = b->next; // Move past dummy headers.
 
     Number* c = new Number();
     Number* c_head = c;
-    int digit_pos = 1;
+    while (a_dec != b_dec && a != nullptr && b != nullptr) {
+        std::cout << "a_dec: " << a_dec << "b_dec: " << b_dec << '\n'; 
+        if (a_dec > b_dec) {
+            c = c->next = new Number(a->digit);
+            a = a->next;
+            b_dec++;
+        } else if (a_dec < b_dec) {
+            c = c->next = new Number(b->digit);
+            b = b->next;
+            a_dec++;
+        }
+    c_head->digit++; // 'empty' decimal point
+
+    print_list(c_head);
+    }
+    int digit_pos = c_head->digit + 1; // start past the decimal point if it was padded out earlier.
     while (a != nullptr || b != nullptr) {
         int sum = 0;
         if (a != nullptr) {
@@ -155,7 +172,8 @@ Number* add_helper(Number* a, Number* b, Stack* add_stack)
         c = c->next = new Number(sum % 10);
         digit_pos++;
     }
-    c_head->digit = digit_pos;
+    std::cout << "Result: \n";
+    print_list(c_head); 
     return c_head;
 }
 
@@ -166,6 +184,8 @@ Number* pad_carry(const int carry, const int power)
     for (int i = power; i > 0; i--)
         subject = subject->next = new Number();
     subject->digit = carry;
+    std::cout << "Padding with: \n";
+    print_list(head);
     return head;
 }
 
